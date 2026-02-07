@@ -533,15 +533,6 @@
             color: #856404;
         }
 
-        .slices-info {
-            margin-top: 12px;
-            padding: 12px;
-            background: #e3f2fd;
-            border-radius: 8px;
-            font-size: 0.875rem;
-            color: #1565c0;
-        }
-
         .export-section {
             margin-top: 20px;
             padding-top: 20px;
@@ -727,11 +718,6 @@
                     </div>
                     <p class="adjuster-note">Use this to swap whole pizzas for half & half</p>
                 </div>
-            </div>
-
-            <div class="slices-info" id="slicesInfo" style="display: none;">
-                <strong>Slice breakdown:</strong>
-                <span id="slicesBreakdown"></span>
             </div>
 
             <div class="note" id="extraNote" style="display: none;">
@@ -1262,7 +1248,6 @@
 
             const container = document.getElementById('recommendation');
             const noteEl = document.getElementById('extraNote');
-            const slicesInfoEl = document.getElementById('slicesInfo');
             const adjusterEl = document.getElementById('halfHalfAdjuster');
 
             const hasAnyOrders = wholeCheese > 0 || wholePepperoni > 0 || splitPizzas > 0 || looseCheeseSlices > 0 || loosePepperoniSlices > 0;
@@ -1270,7 +1255,6 @@
             if (!hasAnyOrders) {
                 container.innerHTML = '<div class="empty-state">Add orders to see recommendation</div>';
                 noteEl.style.display = 'none';
-                slicesInfoEl.style.display = 'none';
                 adjusterEl.style.display = 'none';
                 return;
             }
@@ -1330,19 +1314,13 @@
 
             container.innerHTML = html;
 
-            // Calculate total slices provided vs needed
+            // Calculate extra slices
             const totalCheeseSlicesProvided = (totalWholeCheese * 12) + (totalSplit * 6);
             const totalPepperoniSlicesProvided = (totalWholePepperoni * 12) + (totalSplit * 6);
             const totalCheeseSlicesNeeded = (wholeCheese * 12) + (splitPizzas * 6) + looseCheeseSlices;
             const totalPepperoniSlicesNeeded = (wholePepperoni * 12) + (splitPizzas * 6) + loosePepperoniSlices;
             const extraCheese = totalCheeseSlicesProvided - totalCheeseSlicesNeeded;
             const extraPepperoni = totalPepperoniSlicesProvided - totalPepperoniSlicesNeeded;
-
-            slicesInfoEl.style.display = 'block';
-            document.getElementById('slicesBreakdown').innerHTML = `
-                You'll have ${totalCheeseSlicesProvided} cheese slices (need ${totalCheeseSlicesNeeded}) and
-                ${totalPepperoniSlicesProvided} pepperoni slices (need ${totalPepperoniSlicesNeeded})
-            `;
 
             if (extraCheese > 0 || extraPepperoni > 0) {
                 noteEl.style.display = 'block';
