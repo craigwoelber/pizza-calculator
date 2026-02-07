@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Costco Pizza Calculator</title>
+
+    <!-- PWA meta tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Pizza Calc">
+    <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 8px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            color: rgba(255,255,255,0.85);
+            text-align: center;
+            margin-bottom: 24px;
+            font-size: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 16px;
+            font-size: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .add-family-form {
+            display: grid;
+            gap: 16px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 4px;
+            font-size: 0.875rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.2s;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.875rem;
+        }
+
+        .btn-secondary:hover {
+            background: #218838;
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+        }
+
+        .btn-danger:hover {
+            background: #ff3344;
+        }
+
+        .btn-small {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+        }
+
+        .btn-clear {
+            background: #f1f1f1;
+            color: #666;
+            margin-left: 12px;
+        }
+
+        .btn-edit {
+            background: #ffc107;
+            color: #333;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+        }
+
+        .btn-edit:hover {
+            background: #e0a800;
+        }
+
+        .btn-export {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-export:hover {
+            background: #138496;
+        }
+
+        /* Order items builder */
+        .order-items-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 8px;
+        }
+
+        .order-items-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .order-items-header h3 {
+            font-size: 1rem;
+            color: #333;
+        }
+
+        .order-item-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 8px;
+            align-items: end;
+            margin-bottom: 8px;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 600px) {
+            .order-item-row {
+                grid-template-columns: 1fr 1fr;
+            }
+            .order-item-row > div:nth-child(3) {
+                grid-column: 1 / -1;
+            }
+            .order-item-row > button {
+                grid-column: 1 / -1;
+                justify-self: end;
+            }
+        }
+
+        .order-item-row select,
+        .order-item-row input {
+            padding: 8px 10px;
+            font-size: 0.875rem;
+        }
+
+        .current-items {
+            margin-top: 12px;
+        }
+
+        .current-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #e8f5e9;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            font-size: 0.875rem;
+        }
+
+        .current-item-text {
+            color: #2e7d32;
+        }
+
+        .current-item-price {
+            color: #666;
+            margin-left: 8px;
+        }
+
+        .no-items {
+            color: #999;
+            font-style: italic;
+            font-size: 0.875rem;
+            text-align: center;
+            padding: 12px;
+        }
+
+        .current-total {
+            margin-top: 12px;
+            padding: 12px;
+            background: #fff3cd;
+            border-radius: 8px;
+            font-weight: 600;
+            color: #856404;
+            text-align: right;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .venmo-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            color: #555;
+            cursor: pointer;
+            margin: 0;
+        }
+
+        .venmo-checkbox input[type="checkbox"] {
+            width: auto;
+        }
+
+        /* Orders list */
+        .orders-list {
+            margin-top: 16px;
+        }
+
+        .order-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .order-card.paid {
+            background: #d4edda;
+            border: 2px solid #28a745;
+        }
+
+        .order-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .order-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .family-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .family-total {
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.1rem;
+        }
+
+        .order-card-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .order-card-items {
+            padding-left: 8px;
+        }
+
+        .order-card-item {
+            color: #666;
+            font-size: 0.875rem;
+            padding: 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .order-card-item::before {
+            content: "•";
+            color: #999;
+        }
+
+        .payment-status {
+            margin-top: 12px;
+            padding: 10px 12px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .payment-status label {
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .payment-status input[type="checkbox"] {
+            width: auto;
+        }
+
+        .payment-status select {
+            width: auto;
+            padding: 6px 10px;
+            font-size: 0.875rem;
+        }
+
+        .paid-badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .unpaid-badge {
+            background: #dc3545;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 32px;
+            color: #999;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .summary-item {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8ec 100%);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .summary-item.cheese {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+        }
+
+        .summary-item.pepperoni {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+        }
+
+        .summary-item.money {
+            background: linear-gradient(135deg, #a8e6cf 0%, #88d8b0 100%);
+        }
+
+        .summary-item.outstanding {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+        }
+
+        .summary-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .summary-label {
+            color: #666;
+            font-size: 0.875rem;
+            margin-top: 4px;
+        }
+
+        .order-recommendation {
+            background: #e8f5e9;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .order-recommendation h3 {
+            color: #2e7d32;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .half-half-adjuster {
+            margin-top: 16px;
+            padding: 12px;
+            background: rgba(255,255,255,0.7);
+            border-radius: 8px;
+        }
+
+        .half-half-adjuster label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .adjuster-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .btn-adjust {
+            width: 36px;
+            height: 36px;
+            padding: 0;
+            font-size: 1.25rem;
+            font-weight: bold;
+            border-radius: 50%;
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-adjust:hover {
+            background: #5a6fd6;
+        }
+
+        .adjuster-controls span {
+            font-size: 1.5rem;
+            font-weight: 700;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .adjuster-note {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 8px;
+            margin-bottom: 0;
+        }
+
+        .recommendation-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .recommendation-item:last-child {
+            border-bottom: none;
+        }
+
+        .recommendation-type {
+            font-weight: 500;
+        }
+
+        .recommendation-count {
+            font-weight: 700;
+            color: #2e7d32;
+        }
+
+        .note {
+            margin-top: 16px;
+            padding: 12px;
+            background: #fff3cd;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #856404;
+        }
+
+        .slices-info {
+            margin-top: 12px;
+            padding: 12px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            color: #1565c0;
+        }
+
+        .export-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .order-count {
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        /* Install banner */
+        .install-banner {
+            display: none;
+            background: rgba(255,255,255,0.95);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .install-banner.show {
+            display: flex;
+        }
+
+        .install-banner-text {
+            font-size: 0.875rem;
+            color: #333;
+        }
+
+        .install-banner-text strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .install-banner .btn-dismiss {
+            background: none;
+            color: #999;
+            padding: 4px 8px;
+            font-size: 1.25rem;
+            min-width: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍕 Costco Pizza Calculator</h1>
+        <p class="subtitle">Shanaan Group Order</p>
+
+        <!-- Install prompt banner -->
+        <div class="install-banner" id="installBanner">
+            <div class="install-banner-text">
+                <strong>Install this app</strong>
+                Add to your home screen for quick access &amp; offline use.
+            </div>
+            <button class="btn-primary" id="installBtn" onclick="installApp()" style="white-space: nowrap;">Install</button>
+            <button class="btn-dismiss" onclick="dismissInstall()">✕</button>
+        </div>
+
+        <div class="card">
+            <h2>➕ Add Family Order</h2>
+            <div class="add-family-form">
+                <div>
+                    <label for="familyName">Family Name</label>
+                    <input type="text" id="familyName" placeholder="e.g., Smith Family">
+                </div>
+
+                <div class="order-items-section">
+                    <div class="order-items-header">
+                        <h3>Order Items</h3>
+                        <span style="font-size: 0.75rem; color: #666;">Slice: $1.50 | Whole: $13.00</span>
+                    </div>
+                    
+                    <div class="order-item-row">
+                        <div>
+                            <label for="orderType">Type</label>
+                            <select id="orderType" onchange="updateQuantityLabel()">
+                                <option value="slices">Slices</option>
+                                <option value="whole">Whole Pizza</option>
+                                <option value="half">Half & Half Pizza</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="quantity" id="quantityLabel"># of Slices</label>
+                            <input type="number" id="quantity" min="1" value="2">
+                        </div>
+                        <div id="toppingContainer">
+                            <label for="pizzaType">Topping</label>
+                            <select id="pizzaType">
+                                <option value="cheese">Cheese</option>
+                                <option value="pepperoni">Pepperoni</option>
+                            </select>
+                        </div>
+                        <button class="btn-secondary" onclick="addItemToOrder()">+ Add</button>
+                    </div>
+
+                    <div class="current-items" id="currentItems">
+                        <div class="no-items">No items added yet</div>
+                    </div>
+                    
+                    <div class="current-total" id="currentTotal" style="display: none;">
+                        Running Total: $<span id="currentTotalAmount">0.00</span>
+                    </div>
+                </div>
+
+                <div class="button-row">
+                    <label class="venmo-checkbox">
+                        <input type="checkbox" id="paidVenmo">
+                        Paid via Venmo
+                    </label>
+                </div>
+                <div class="button-row">
+                    <button id="saveButton" class="btn-primary" onclick="saveFamily()">Save Family Order</button>
+                    <button id="cancelEditButton" class="btn-clear" onclick="cancelEdit()" style="display: none;">Cancel Edit</button>
+                    <button id="clearAllButton" class="btn-clear" onclick="clearAll()">Clear All Orders</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📋 Orders</h2>
+            <div id="ordersList" class="orders-list">
+                <div class="empty-state">No orders yet. Add a family above!</div>
+            </div>
+            
+            <div class="export-section" id="exportSection" style="display: none;">
+                <span class="order-count" id="orderCount">0 families</span>
+                <button class="btn-export" onclick="exportToCSV()">📥 Export to CSV</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📊 Summary & Recommendation</h2>
+            <div class="summary-grid">
+                <div class="summary-item cheese">
+                    <div class="summary-number" id="cheeseSlices">0</div>
+                    <div class="summary-label">Cheese Slices Needed</div>
+                </div>
+                <div class="summary-item pepperoni">
+                    <div class="summary-number" id="pepperoniSlices">0</div>
+                    <div class="summary-label">Pepperoni Slices Needed</div>
+                </div>
+                <div class="summary-item money">
+                    <div class="summary-number" id="totalCollected">$0.00</div>
+                    <div class="summary-label">📱 Venmo Collected</div>
+                </div>
+                <div class="summary-item outstanding">
+                    <div class="summary-number" id="totalOutstanding">$0.00</div>
+                    <div class="summary-label">💵 Cash to Collect</div>
+                </div>
+            </div>
+
+            <div class="order-recommendation">
+                <h3>🛒 Order This:</h3>
+                <div id="recommendation">
+                    <div class="empty-state">Add orders to see recommendation</div>
+                </div>
+                <div class="half-half-adjuster" id="halfHalfAdjuster" style="display: none;">
+                    <label>Adjust half & half pizzas:</label>
+                    <div class="adjuster-controls">
+                        <button class="btn-adjust" onclick="adjustHalfHalf(-1)">−</button>
+                        <span id="manualHalfHalf">0</span>
+                        <button class="btn-adjust" onclick="adjustHalfHalf(1)">+</button>
+                    </div>
+                    <p class="adjuster-note">Use this to swap whole pizzas for half & half</p>
+                </div>
+            </div>
+
+            <div class="slices-info" id="slicesInfo" style="display: none;">
+                <strong>Slice breakdown:</strong>
+                <span id="slicesBreakdown"></span>
+            </div>
+
+            <div class="note" id="extraNote" style="display: none;">
+                <strong>Note:</strong> <span id="extraNoteText"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // IndexedDB Storage Layer
+        // ============================================================
+        const DB_NAME = 'PizzaCalculatorDB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'families';
+        let db = null;
+
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onupgradeneeded = (event) => {
+                    const database = event.target.result;
+                    if (!database.objectStoreNames.contains(STORE_NAME)) {
+                        database.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+                request.onerror = (event) => {
+                    console.error('IndexedDB error:', event.target.error);
+                    reject(event.target.error);
+                };
+            });
+        }
+
+        function dbGetAll() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.getAll();
+                request.onsuccess = () => resolve(request.result || []);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function dbPut(family) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.put(family);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function dbDelete(id) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.delete(id);
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function dbClear() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readwrite');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.clear();
+                request.onsuccess = () => resolve();
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // Migrate any existing localStorage data into IndexedDB
+        async function migrateFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem('pizzaOrderData');
+                if (saved) {
+                    const oldFamilies = JSON.parse(saved);
+                    for (const family of oldFamilies) {
+                        await dbPut(family);
+                    }
+                    localStorage.removeItem('pizzaOrderData');
+                    console.log('Migrated', oldFamilies.length, 'families from localStorage to IndexedDB');
+                }
+            } catch (e) {
+                console.warn('localStorage migration skipped:', e);
+            }
+        }
+
+        // ============================================================
+        // App State
+        // ============================================================
+        let families = [];
+        let currentOrderItems = [];
+        let editingFamilyId = null;
+        const SLICES_PER_PIZZA = 12;
+        const SLICE_PRICE = 1.50;
+        const WHOLE_PIZZA_PRICE = 13.00;
+
+        let clearConfirmPending = false;
+        let clearConfirmTimeout = null;
+        let manualHalfHalfAdjustment = 0;
+        let lastCheeseNeeded = 0;
+        let lastPepperoniNeeded = 0;
+
+        // ============================================================
+        // Persistence helpers
+        // ============================================================
+        async function loadFromStorage() {
+            try {
+                await openDB();
+                await migrateFromLocalStorage();
+                families = await dbGetAll();
+                renderFamilies();
+                updateSummary();
+            } catch (e) {
+                console.error('Error loading from IndexedDB:', e);
+            }
+        }
+
+        async function saveFamily() {
+            const familyName = document.getElementById('familyName').value.trim();
+            const paidVenmo = document.getElementById('paidVenmo').checked;
+
+            if (!familyName) {
+                alert('Please enter a family name');
+                return;
+            }
+
+            if (currentOrderItems.length === 0) {
+                alert('Please add at least one item to the order');
+                return;
+            }
+
+            const total = currentOrderItems.reduce((sum, item) => sum + item.price, 0);
+
+            if (editingFamilyId) {
+                const familyIndex = families.findIndex(f => f.id === editingFamilyId);
+                if (familyIndex !== -1) {
+                    families[familyIndex].name = familyName;
+                    families[familyIndex].items = [...currentOrderItems];
+                    families[familyIndex].total = total;
+                    families[familyIndex].paid = paidVenmo;
+                    await dbPut(families[familyIndex]);
+                }
+                editingFamilyId = null;
+                document.getElementById('saveButton').textContent = 'Save Family Order';
+                document.getElementById('cancelEditButton').style.display = 'none';
+            } else {
+                const newFamily = {
+                    id: Date.now(),
+                    name: familyName,
+                    items: [...currentOrderItems],
+                    total,
+                    paid: paidVenmo,
+                    paymentMethod: ''
+                };
+                families.push(newFamily);
+                await dbPut(newFamily);
+            }
+
+            document.getElementById('familyName').value = '';
+            document.getElementById('paidVenmo').checked = false;
+            currentOrderItems = [];
+            renderCurrentItems();
+            renderFamilies();
+            updateSummary();
+        }
+
+        async function removeFamily(id) {
+            families = families.filter(f => f.id !== id);
+            await dbDelete(id);
+            renderFamilies();
+            updateSummary();
+        }
+
+        async function togglePaid(id) {
+            const family = families.find(f => f.id === id);
+            if (family) {
+                family.paid = !family.paid;
+                await dbPut(family);
+                renderFamilies();
+                updateSummary();
+            }
+        }
+
+        async function clearAll() {
+            const btn = document.getElementById('clearAllButton');
+            
+            if (!clearConfirmPending) {
+                clearConfirmPending = true;
+                btn.textContent = '⚠️ Tap again to confirm';
+                btn.classList.add('btn-danger');
+                btn.classList.remove('btn-clear');
+                clearConfirmTimeout = setTimeout(() => { resetClearButton(); }, 3000);
+            } else {
+                clearTimeout(clearConfirmTimeout);
+                resetClearButton();
+
+                families = [];
+                currentOrderItems = [];
+                editingFamilyId = null;
+                document.getElementById('familyName').value = '';
+                document.getElementById('saveButton').textContent = 'Save Family Order';
+                document.getElementById('cancelEditButton').style.display = 'none';
+                renderCurrentItems();
+                renderFamilies();
+                updateSummary();
+                await dbClear();
+            }
+        }
+
+        // ============================================================
+        // UI Logic (unchanged from original)
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', loadFromStorage);
+
+        function updateQuantityLabel() {
+            const orderType = document.getElementById('orderType').value;
+            const label = document.getElementById('quantityLabel');
+            const input = document.getElementById('quantity');
+            const toppingContainer = document.getElementById('toppingContainer');
+            
+            if (orderType === 'slices') {
+                label.textContent = '# of Slices';
+                input.value = 2;
+                toppingContainer.style.display = 'block';
+            } else if (orderType === 'whole') {
+                label.textContent = '# of Pizzas';
+                input.value = 1;
+                toppingContainer.style.display = 'block';
+            } else if (orderType === 'half') {
+                label.textContent = '# of Pizzas';
+                input.value = 1;
+                toppingContainer.style.display = 'none';
+            }
+        }
+
+        function calculateItemPrice(item) {
+            if (item.type === 'whole' || item.type === 'half') {
+                return item.quantity * WHOLE_PIZZA_PRICE;
+            } else {
+                return item.quantity * SLICE_PRICE;
+            }
+        }
+
+        function addItemToOrder() {
+            const orderType = document.getElementById('orderType').value;
+            const quantity = parseInt(document.getElementById('quantity').value);
+            const pizzaType = document.getElementById('pizzaType').value;
+
+            if (quantity < 1) {
+                alert('Please enter a valid quantity');
+                return;
+            }
+
+            let slices, cheeseSlices, pepperoniSlices, topping;
+            
+            if (orderType === 'half') {
+                slices = quantity * SLICES_PER_PIZZA;
+                cheeseSlices = quantity * 6;
+                pepperoniSlices = quantity * 6;
+                topping = 'half';
+            } else if (orderType === 'whole') {
+                slices = quantity * SLICES_PER_PIZZA;
+                cheeseSlices = pizzaType === 'cheese' ? slices : 0;
+                pepperoniSlices = pizzaType === 'pepperoni' ? slices : 0;
+                topping = pizzaType;
+            } else {
+                slices = quantity;
+                cheeseSlices = pizzaType === 'cheese' ? slices : 0;
+                pepperoniSlices = pizzaType === 'pepperoni' ? slices : 0;
+                topping = pizzaType;
+            }
+
+            const item = {
+                id: Date.now(),
+                type: orderType,
+                quantity,
+                topping,
+                slices,
+                cheeseSlices,
+                pepperoniSlices
+            };
+            item.price = calculateItemPrice(item);
+
+            currentOrderItems.push(item);
+
+            document.getElementById('quantity').value = orderType === 'slices' ? 2 : 1;
+            renderCurrentItems();
+        }
+
+        function removeCurrentItem(id) {
+            currentOrderItems = currentOrderItems.filter(item => item.id !== id);
+            renderCurrentItems();
+        }
+
+        function renderCurrentItems() {
+            const container = document.getElementById('currentItems');
+            const totalContainer = document.getElementById('currentTotal');
+            
+            if (currentOrderItems.length === 0) {
+                container.innerHTML = '<div class="no-items">No items added yet</div>';
+                totalContainer.style.display = 'none';
+                return;
+            }
+
+            container.innerHTML = currentOrderItems.map(item => `
+                <div class="current-item">
+                    <span>
+                        <span class="current-item-text">${formatItem(item)}</span>
+                        <span class="current-item-price">— $${item.price.toFixed(2)}</span>
+                    </span>
+                    <button class="btn-danger btn-small" onclick="removeCurrentItem(${item.id})">✕</button>
+                </div>
+            `).join('');
+
+            const total = currentOrderItems.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('currentTotalAmount').textContent = total.toFixed(2);
+            totalContainer.style.display = 'block';
+        }
+
+        function formatItem(item) {
+            if (item.type === 'half') {
+                return `🍕 ${item.quantity} half & half pizza${item.quantity > 1 ? 's' : ''} (${item.slices} slices)`;
+            } else if (item.type === 'whole') {
+                const emoji = item.topping === 'cheese' ? '🧀' : '🍖';
+                return `${emoji} ${item.quantity} whole ${item.topping} pizza${item.quantity > 1 ? 's' : ''} (${item.slices} slices)`;
+            } else {
+                const emoji = item.topping === 'cheese' ? '🧀' : '🍖';
+                return `${emoji} ${item.slices} ${item.topping} slice${item.slices > 1 ? 's' : ''}`;
+            }
+        }
+
+        function formatItemShort(item) {
+            if (item.type === 'half') {
+                return `${item.quantity} half & half`;
+            } else if (item.type === 'whole') {
+                return `${item.quantity} whole ${item.topping}`;
+            } else {
+                return `${item.slices} ${item.topping} slice${item.slices > 1 ? 's' : ''}`;
+            }
+        }
+
+        function editFamily(id) {
+            const family = families.find(f => f.id === id);
+            if (!family) return;
+
+            document.getElementById('familyName').value = family.name;
+            document.getElementById('paidVenmo').checked = family.paid;
+            currentOrderItems = family.items.map(item => ({...item}));
+            editingFamilyId = id;
+
+            document.getElementById('saveButton').textContent = 'Update Family Order';
+            document.getElementById('cancelEditButton').style.display = 'inline-block';
+
+            renderCurrentItems();
+
+            document.getElementById('familyName').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            document.getElementById('familyName').focus();
+        }
+
+        function cancelEdit() {
+            editingFamilyId = null;
+            document.getElementById('familyName').value = '';
+            document.getElementById('paidVenmo').checked = false;
+            currentOrderItems = [];
+            document.getElementById('saveButton').textContent = 'Save Family Order';
+            document.getElementById('cancelEditButton').style.display = 'none';
+            renderCurrentItems();
+        }
+
+        function resetClearButton() {
+            clearConfirmPending = false;
+            const btn = document.getElementById('clearAllButton');
+            btn.textContent = 'Clear All Orders';
+            btn.classList.remove('btn-danger');
+            btn.classList.add('btn-clear');
+        }
+
+        function renderFamilies() {
+            const container = document.getElementById('ordersList');
+            const exportSection = document.getElementById('exportSection');
+            
+            if (families.length === 0) {
+                container.innerHTML = '<div class="empty-state">No orders yet. Add a family above!</div>';
+                exportSection.style.display = 'none';
+                return;
+            }
+
+            exportSection.style.display = 'flex';
+            document.getElementById('orderCount').textContent = `${families.length} ${families.length === 1 ? 'family' : 'families'}`;
+
+            container.innerHTML = families.map(family => `
+                <div class="order-card ${family.paid ? 'paid' : ''}">
+                    <div class="order-card-header">
+                        <span>
+                            <span class="family-name">${escapeHtml(family.name)}</span>
+                            ${family.paid ? '<span class="paid-badge">VENMO</span>' : '<span class="unpaid-badge">CASH</span>'}
+                        </span>
+                        <span class="family-total">$${family.total.toFixed(2)}</span>
+                    </div>
+                    <div class="order-card-items">
+                        ${family.items.map(item => `
+                            <div class="order-card-item">${formatItem(item)} — $${item.price.toFixed(2)}</div>
+                        `).join('')}
+                    </div>
+                    <div class="payment-status">
+                        <label>
+                            <input type="checkbox" ${family.paid ? 'checked' : ''} onchange="togglePaid(${family.id})">
+                            Paid via Venmo
+                        </label>
+                        <button class="btn-edit" onclick="editFamily(${family.id})">Edit</button>
+                        <button class="btn-danger" onclick="removeFamily(${family.id})">Remove</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function exportToCSV() {
+            const headers = ['Family Name', 'Order Details', 'Total', 'Payment Method'];
+            const rows = families.map(family => [
+                family.name,
+                family.items.map(item => formatItemShort(item)).join('; '),
+                `$${family.total.toFixed(2)}`,
+                family.paid ? 'Venmo' : 'Cash'
+            ]);
+
+            const totalVenmo = families.filter(f => f.paid).reduce((sum, f) => sum + f.total, 0);
+            const totalCash = families.filter(f => !f.paid).reduce((sum, f) => sum + f.total, 0);
+            const grandTotal = families.reduce((sum, f) => sum + f.total, 0);
+
+            rows.push([]);
+            rows.push(['SUMMARY', '', '', '']);
+            rows.push(['Venmo Collected', '', `$${totalVenmo.toFixed(2)}`, '']);
+            rows.push(['Cash to Collect', '', `$${totalCash.toFixed(2)}`, '']);
+            rows.push(['Grand Total', '', `$${grandTotal.toFixed(2)}`, '']);
+
+            const csvContent = [
+                headers.join(','),
+                ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+            ].join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `pizza-order-${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function updateSummary() {
+            let cheeseSlices = 0;
+            let pepperoniSlices = 0;
+
+            families.forEach(family => {
+                family.items.forEach(item => {
+                    if (item.cheeseSlices !== undefined) {
+                        cheeseSlices += item.cheeseSlices;
+                        pepperoniSlices += item.pepperoniSlices;
+                    } else {
+                        if (item.topping === 'cheese') {
+                            cheeseSlices += item.slices;
+                        } else if (item.topping === 'pepperoni') {
+                            pepperoniSlices += item.slices;
+                        } else if (item.topping === 'half') {
+                            cheeseSlices += item.slices / 2;
+                            pepperoniSlices += item.slices / 2;
+                        }
+                    }
+                });
+            });
+
+            document.getElementById('cheeseSlices').textContent = cheeseSlices;
+            document.getElementById('pepperoniSlices').textContent = pepperoniSlices;
+
+            const totalCollected = families.filter(f => f.paid).reduce((sum, f) => sum + f.total, 0);
+            const totalOutstanding = families.filter(f => !f.paid).reduce((sum, f) => sum + f.total, 0);
+            
+            document.getElementById('totalCollected').textContent = `$${totalCollected.toFixed(2)}`;
+            document.getElementById('totalOutstanding').textContent = `$${totalOutstanding.toFixed(2)}`;
+
+            updateRecommendation(cheeseSlices, pepperoniSlices);
+        }
+
+        function adjustHalfHalf(delta) {
+            manualHalfHalfAdjustment += delta;
+            if (manualHalfHalfAdjustment < 0) manualHalfHalfAdjustment = 0;
+            document.getElementById('manualHalfHalf').textContent = manualHalfHalfAdjustment;
+            updateRecommendation(lastCheeseNeeded, lastPepperoniNeeded);
+        }
+
+        function updateRecommendation(cheeseNeeded, pepperoniNeeded) {
+            lastCheeseNeeded = cheeseNeeded;
+            lastPepperoniNeeded = pepperoniNeeded;
+            
+            const container = document.getElementById('recommendation');
+            const noteEl = document.getElementById('extraNote');
+            const slicesInfoEl = document.getElementById('slicesInfo');
+            const adjusterEl = document.getElementById('halfHalfAdjuster');
+
+            if (cheeseNeeded === 0 && pepperoniNeeded === 0) {
+                container.innerHTML = '<div class="empty-state">Add orders to see recommendation</div>';
+                noteEl.style.display = 'none';
+                slicesInfoEl.style.display = 'none';
+                adjusterEl.style.display = 'none';
+                return;
+            }
+
+            adjusterEl.style.display = 'block';
+            document.getElementById('manualHalfHalf').textContent = manualHalfHalfAdjustment;
+
+            let bestOrder = findOptimalOrder(cheeseNeeded, pepperoniNeeded, manualHalfHalfAdjustment);
+            
+            let html = '';
+            
+            if (bestOrder.wholeCheese > 0) {
+                html += `
+                    <div class="recommendation-item">
+                        <span class="recommendation-type">🧀 Whole Cheese Pizza</span>
+                        <span class="recommendation-count">${bestOrder.wholeCheese}</span>
+                    </div>
+                `;
+            }
+            
+            if (bestOrder.wholePepperoni > 0) {
+                html += `
+                    <div class="recommendation-item">
+                        <span class="recommendation-type">🍖 Whole Pepperoni Pizza</span>
+                        <span class="recommendation-count">${bestOrder.wholePepperoni}</span>
+                    </div>
+                `;
+            }
+            
+            if (bestOrder.halfAndHalf > 0) {
+                html += `
+                    <div class="recommendation-item">
+                        <span class="recommendation-type">🍕 Half Cheese / Half Pepperoni</span>
+                        <span class="recommendation-count">${bestOrder.halfAndHalf}</span>
+                    </div>
+                `;
+            }
+
+            const totalPizzas = bestOrder.wholeCheese + bestOrder.wholePepperoni + bestOrder.halfAndHalf;
+            html += `
+                <div class="recommendation-item" style="margin-top: 12px; padding-top: 12px; border-top: 2px solid rgba(0,0,0,0.1);">
+                    <span class="recommendation-type"><strong>Total Pizzas</strong></span>
+                    <span class="recommendation-count">${totalPizzas}</span>
+                </div>
+            `;
+
+            container.innerHTML = html;
+
+            const totalCheeseSlices = (bestOrder.wholeCheese * 12) + (bestOrder.halfAndHalf * 6);
+            const totalPepperoniSlices = (bestOrder.wholePepperoni * 12) + (bestOrder.halfAndHalf * 6);
+            const extraCheese = totalCheeseSlices - cheeseNeeded;
+            const extraPepperoni = totalPepperoniSlices - pepperoniNeeded;
+
+            slicesInfoEl.style.display = 'block';
+            document.getElementById('slicesBreakdown').innerHTML = `
+                You'll have ${totalCheeseSlices} cheese slices (need ${cheeseNeeded}) and 
+                ${totalPepperoniSlices} pepperoni slices (need ${pepperoniNeeded})
+            `;
+
+            if (extraCheese > 0 || extraPepperoni > 0) {
+                noteEl.style.display = 'block';
+                let noteText = 'You\'ll have ';
+                const extras = [];
+                if (extraCheese > 0) extras.push(`${extraCheese} extra cheese slice${extraCheese > 1 ? 's' : ''}`);
+                if (extraPepperoni > 0) extras.push(`${extraPepperoni} extra pepperoni slice${extraPepperoni > 1 ? 's' : ''}`);
+                noteText += extras.join(' and ') + ' for seconds or latecomers!';
+                document.getElementById('extraNoteText').textContent = noteText;
+            } else {
+                noteEl.style.display = 'none';
+            }
+        }
+
+        function findOptimalOrder(cheeseNeeded, pepperoniNeeded, forcedHalfHalf = 0) {
+            if (forcedHalfHalf > 0) {
+                const cheeseFromHalf = forcedHalfHalf * 6;
+                const pepperoniFromHalf = forcedHalfHalf * 6;
+                const remainingCheese = Math.max(0, cheeseNeeded - cheeseFromHalf);
+                const remainingPepperoni = Math.max(0, pepperoniNeeded - pepperoniFromHalf);
+                const wholeCheese = Math.ceil(remainingCheese / 12);
+                const wholePepperoni = Math.ceil(remainingPepperoni / 12);
+                return { wholeCheese, wholePepperoni, halfAndHalf: forcedHalfHalf };
+            }
+
+            let bestOrder = null;
+            let bestTotal = Infinity;
+            let bestWaste = Infinity;
+
+            const maxPizzas = Math.ceil((cheeseNeeded + pepperoniNeeded) / 12) + 2;
+
+            for (let halfAndHalf = 0; halfAndHalf <= maxPizzas; halfAndHalf++) {
+                const cheeseFromHalf = halfAndHalf * 6;
+                const pepperoniFromHalf = halfAndHalf * 6;
+                const remainingCheese = Math.max(0, cheeseNeeded - cheeseFromHalf);
+                const remainingPepperoni = Math.max(0, pepperoniNeeded - pepperoniFromHalf);
+                const wholeCheese = Math.ceil(remainingCheese / 12);
+                const wholePepperoni = Math.ceil(remainingPepperoni / 12);
+                const totalCheese = cheeseFromHalf + (wholeCheese * 12);
+                const totalPepperoni = pepperoniFromHalf + (wholePepperoni * 12);
+
+                if (totalCheese >= cheeseNeeded && totalPepperoni >= pepperoniNeeded) {
+                    const totalPizzas = wholeCheese + wholePepperoni + halfAndHalf;
+                    const waste = (totalCheese - cheeseNeeded) + (totalPepperoni - pepperoniNeeded);
+
+                    if (totalPizzas < bestTotal || (totalPizzas === bestTotal && waste < bestWaste)) {
+                        bestTotal = totalPizzas;
+                        bestWaste = waste;
+                        bestOrder = { wholeCheese, wholePepperoni, halfAndHalf };
+                    }
+                }
+            }
+
+            return bestOrder || { wholeCheese: 0, wholePepperoni: 0, halfAndHalf: 0 };
+        }
+
+        // ============================================================
+        // PWA: Service Worker + Install Prompt
+        // ============================================================
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registered:', reg.scope))
+                .catch(err => console.warn('SW registration failed:', err));
+        }
+
+        let deferredPrompt = null;
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installBanner').classList.add('show');
+        });
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(choice => {
+                    deferredPrompt = null;
+                    document.getElementById('installBanner').classList.remove('show');
+                });
+            }
+        }
+
+        function dismissInstall() {
+            document.getElementById('installBanner').classList.remove('show');
+        }
+
+        window.addEventListener('appinstalled', () => {
+            document.getElementById('installBanner').classList.remove('show');
+            deferredPrompt = null;
+        });
+    </script>
+</body>
+</html>
