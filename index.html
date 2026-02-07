@@ -684,12 +684,24 @@
             <h2>📊 Summary & Recommendation</h2>
             <div class="summary-grid">
                 <div class="summary-item cheese">
-                    <div class="summary-number" id="cheeseSlices">0</div>
-                    <div class="summary-label">Cheese Slices Needed</div>
+                    <div class="summary-number" id="wholeCheese">0</div>
+                    <div class="summary-label">Whole Cheese Pizzas</div>
                 </div>
                 <div class="summary-item pepperoni">
-                    <div class="summary-number" id="pepperoniSlices">0</div>
-                    <div class="summary-label">Pepperoni Slices Needed</div>
+                    <div class="summary-number" id="wholePepperoni">0</div>
+                    <div class="summary-label">Whole Pepperoni Pizzas</div>
+                </div>
+                <div class="summary-item" style="background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);">
+                    <div class="summary-number" id="splitPizzas">0</div>
+                    <div class="summary-label">🍕 Split Pizzas</div>
+                </div>
+                <div class="summary-item cheese">
+                    <div class="summary-number" id="looseCheeseSlices">0</div>
+                    <div class="summary-label">Loose Cheese Slices</div>
+                </div>
+                <div class="summary-item pepperoni">
+                    <div class="summary-number" id="loosePepperoniSlices">0</div>
+                    <div class="summary-label">Loose Pepperoni Slices</div>
                 </div>
                 <div class="summary-item money">
                     <div class="summary-number" id="totalCollected">$0.00</div>
@@ -827,8 +839,11 @@
         let clearConfirmPending = false;
         let clearConfirmTimeout = null;
         let manualHalfHalfAdjustment = 0;
-        let lastCheeseNeeded = 0;
-        let lastPepperoniNeeded = 0;
+        let lastWholeCheese = 0;
+        let lastWholePepperoni = 0;
+        let lastSplitPizzas = 0;
+        let lastLooseCheese = 0;
+        let lastLoosePepperoni = 0;
 
         // ============================================================
         // Persistence helpers
@@ -1186,56 +1201,73 @@
         }
 
         function updateSummary() {
-            let cheeseSlices = 0;
-            let pepperoniSlices = 0;
+            let wholeCheese = 0;
+            let wholePepperoni = 0;
+            let splitPizzas = 0;
+            let looseCheeseSlices = 0;
+            let loosePepperoniSlices = 0;
 
             families.forEach(family => {
                 family.items.forEach(item => {
-                    if (item.cheeseSlices !== undefined) {
-                        cheeseSlices += item.cheeseSlices;
-                        pepperoniSlices += item.pepperoniSlices;
-                    } else {
+                    if (item.type === 'whole') {
                         if (item.topping === 'cheese') {
-                            cheeseSlices += item.slices;
+                            wholeCheese += item.quantity;
                         } else if (item.topping === 'pepperoni') {
-                            pepperoniSlices += item.slices;
-                        } else if (item.topping === 'half') {
-                            cheeseSlices += item.slices / 2;
-                            pepperoniSlices += item.slices / 2;
+                            wholePepperoni += item.quantity;
+                        }
+                    } else if (item.type === 'half') {
+                        splitPizzas += item.quantity;
+                    } else {
+                        // loose slices
+                        if (item.cheeseSlices !== undefined) {
+                            looseCheeseSlices += item.cheeseSlices;
+                            loosePepperoniSlices += item.pepperoniSlices;
+                        } else if (item.topping === 'cheese') {
+                            looseCheeseSlices += item.slices;
+                        } else if (item.topping === 'pepperoni') {
+                            loosePepperoniSlices += item.slices;
                         }
                     }
                 });
             });
 
-            document.getElementById('cheeseSlices').textContent = cheeseSlices;
-            document.getElementById('pepperoniSlices').textContent = pepperoniSlices;
+            document.getElementById('wholeCheese').textContent = wholeCheese;
+            document.getElementById('wholePepperoni').textContent = wholePepperoni;
+            document.getElementById('splitPizzas').textContent = splitPizzas;
+            document.getElementById('looseCheeseSlices').textContent = looseCheeseSlices;
+            document.getElementById('loosePepperoniSlices').textContent = loosePepperoniSlices;
 
             const totalCollected = families.filter(f => f.paid).reduce((sum, f) => sum + f.total, 0);
             const totalOutstanding = families.filter(f => !f.paid).reduce((sum, f) => sum + f.total, 0);
-            
+
             document.getElementById('totalCollected').textContent = `$${totalCollected.toFixed(2)}`;
             document.getElementById('totalOutstanding').textContent = `$${totalOutstanding.toFixed(2)}`;
 
-            updateRecommendation(cheeseSlices, pepperoniSlices);
+            updateRecommendation(wholeCheese, wholePepperoni, splitPizzas, looseCheeseSlices, loosePepperoniSlices);
         }
 
         function adjustHalfHalf(delta) {
             manualHalfHalfAdjustment += delta;
             if (manualHalfHalfAdjustment < 0) manualHalfHalfAdjustment = 0;
             document.getElementById('manualHalfHalf').textContent = manualHalfHalfAdjustment;
-            updateRecommendation(lastCheeseNeeded, lastPepperoniNeeded);
+            updateRecommendation(lastWholeCheese, lastWholePepperoni, lastSplitPizzas, lastLooseCheese, lastLoosePepperoni);
         }
 
-        function updateRecommendation(cheeseNeeded, pepperoniNeeded) {
-            lastCheeseNeeded = cheeseNeeded;
-            lastPepperoniNeeded = pepperoniNeeded;
-            
+        function updateRecommendation(wholeCheese, wholePepperoni, splitPizzas, looseCheeseSlices, loosePepperoniSlices) {
+            lastWholeCheese = wholeCheese;
+            lastWholePepperoni = wholePepperoni;
+            lastSplitPizzas = splitPizzas;
+            lastLooseCheese = looseCheeseSlices;
+            lastLoosePepperoni = loosePepperoniSlices;
+
             const container = document.getElementById('recommendation');
             const noteEl = document.getElementById('extraNote');
             const slicesInfoEl = document.getElementById('slicesInfo');
             const adjusterEl = document.getElementById('halfHalfAdjuster');
 
-            if (cheeseNeeded === 0 && pepperoniNeeded === 0) {
+            const hasAnyOrders = wholeCheese > 0 || wholePepperoni > 0 || splitPizzas > 0 || looseCheeseSlices > 0 || loosePepperoniSlices > 0;
+
+            if (!hasAnyOrders) {
                 container.innerHTML = '<div class="empty-state">Add orders to see recommendation</div>';
                 noteEl.style.display = 'none';
                 slicesInfoEl.style.display = 'none';
@@ -1243,41 +1275,52 @@
                 return;
             }
 
-            adjusterEl.style.display = 'block';
-            document.getElementById('manualHalfHalf').textContent = manualHalfHalfAdjustment;
+            // Show adjuster only if there are loose slices to optimize
+            if (looseCheeseSlices > 0 || loosePepperoniSlices > 0) {
+                adjusterEl.style.display = 'block';
+                document.getElementById('manualHalfHalf').textContent = manualHalfHalfAdjustment;
+            } else {
+                adjusterEl.style.display = 'none';
+            }
 
-            let bestOrder = findOptimalOrder(cheeseNeeded, pepperoniNeeded, manualHalfHalfAdjustment);
-            
+            // Optimize only the loose slices into additional pizzas
+            const looseOrder = findOptimalOrder(looseCheeseSlices, loosePepperoniSlices, manualHalfHalfAdjustment);
+
+            // Final order = direct whole/split orders + additional pizzas for loose slices
+            const totalWholeCheese = wholeCheese + looseOrder.wholeCheese;
+            const totalWholePepperoni = wholePepperoni + looseOrder.wholePepperoni;
+            const totalSplit = splitPizzas + looseOrder.halfAndHalf;
+
             let html = '';
-            
-            if (bestOrder.wholeCheese > 0) {
+
+            if (totalWholeCheese > 0) {
                 html += `
                     <div class="recommendation-item">
                         <span class="recommendation-type">🧀 Whole Cheese Pizza</span>
-                        <span class="recommendation-count">${bestOrder.wholeCheese}</span>
-                    </div>
-                `;
-            }
-            
-            if (bestOrder.wholePepperoni > 0) {
-                html += `
-                    <div class="recommendation-item">
-                        <span class="recommendation-type">🍖 Whole Pepperoni Pizza</span>
-                        <span class="recommendation-count">${bestOrder.wholePepperoni}</span>
-                    </div>
-                `;
-            }
-            
-            if (bestOrder.halfAndHalf > 0) {
-                html += `
-                    <div class="recommendation-item">
-                        <span class="recommendation-type">🍕 Half Cheese / Half Pepperoni</span>
-                        <span class="recommendation-count">${bestOrder.halfAndHalf}</span>
+                        <span class="recommendation-count">${totalWholeCheese}</span>
                     </div>
                 `;
             }
 
-            const totalPizzas = bestOrder.wholeCheese + bestOrder.wholePepperoni + bestOrder.halfAndHalf;
+            if (totalWholePepperoni > 0) {
+                html += `
+                    <div class="recommendation-item">
+                        <span class="recommendation-type">🍖 Whole Pepperoni Pizza</span>
+                        <span class="recommendation-count">${totalWholePepperoni}</span>
+                    </div>
+                `;
+            }
+
+            if (totalSplit > 0) {
+                html += `
+                    <div class="recommendation-item">
+                        <span class="recommendation-type">🍕 Half Cheese / Half Pepperoni</span>
+                        <span class="recommendation-count">${totalSplit}</span>
+                    </div>
+                `;
+            }
+
+            const totalPizzas = totalWholeCheese + totalWholePepperoni + totalSplit;
             html += `
                 <div class="recommendation-item" style="margin-top: 12px; padding-top: 12px; border-top: 2px solid rgba(0,0,0,0.1);">
                     <span class="recommendation-type"><strong>Total Pizzas</strong></span>
@@ -1287,15 +1330,18 @@
 
             container.innerHTML = html;
 
-            const totalCheeseSlices = (bestOrder.wholeCheese * 12) + (bestOrder.halfAndHalf * 6);
-            const totalPepperoniSlices = (bestOrder.wholePepperoni * 12) + (bestOrder.halfAndHalf * 6);
-            const extraCheese = totalCheeseSlices - cheeseNeeded;
-            const extraPepperoni = totalPepperoniSlices - pepperoniNeeded;
+            // Calculate total slices provided vs needed
+            const totalCheeseSlicesProvided = (totalWholeCheese * 12) + (totalSplit * 6);
+            const totalPepperoniSlicesProvided = (totalWholePepperoni * 12) + (totalSplit * 6);
+            const totalCheeseSlicesNeeded = (wholeCheese * 12) + (splitPizzas * 6) + looseCheeseSlices;
+            const totalPepperoniSlicesNeeded = (wholePepperoni * 12) + (splitPizzas * 6) + loosePepperoniSlices;
+            const extraCheese = totalCheeseSlicesProvided - totalCheeseSlicesNeeded;
+            const extraPepperoni = totalPepperoniSlicesProvided - totalPepperoniSlicesNeeded;
 
             slicesInfoEl.style.display = 'block';
             document.getElementById('slicesBreakdown').innerHTML = `
-                You'll have ${totalCheeseSlices} cheese slices (need ${cheeseNeeded}) and 
-                ${totalPepperoniSlices} pepperoni slices (need ${pepperoniNeeded})
+                You'll have ${totalCheeseSlicesProvided} cheese slices (need ${totalCheeseSlicesNeeded}) and
+                ${totalPepperoniSlicesProvided} pepperoni slices (need ${totalPepperoniSlicesNeeded})
             `;
 
             if (extraCheese > 0 || extraPepperoni > 0) {
@@ -1312,6 +1358,10 @@
         }
 
         function findOptimalOrder(cheeseNeeded, pepperoniNeeded, forcedHalfHalf = 0) {
+            if (cheeseNeeded === 0 && pepperoniNeeded === 0) {
+                return { wholeCheese: 0, wholePepperoni: 0, halfAndHalf: 0 };
+            }
+
             if (forcedHalfHalf > 0) {
                 const cheeseFromHalf = forcedHalfHalf * 6;
                 const pepperoniFromHalf = forcedHalfHalf * 6;
